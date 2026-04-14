@@ -1,20 +1,55 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import HomeScreen from './src/screens/HomeScreen';
+import ResultsScreen from './src/screens/ResultsScreen';
+import { ParkingFacility } from './src/data/inventory';
+import { OccupancyResult } from './src/data/occupancy';
+import { ETABreakdown } from './src/engine/eta';
+import { RiskBucket, ResultTag } from './src/engine/ranking';
+
+// Serialized result — navigation params must be JSON-serializable
+export type SerializedResult = {
+  facility: ParkingFacility;
+  eta: ETABreakdown;
+  occupancy: OccupancyResult;
+  arrivalTime: string;       // ISO string
+  slackMinutes: number | null;
+  bucket: RiskBucket;
+  score: number;
+  tags: ResultTag[];
+};
+
+export type RootStackParamList = {
+  Home: undefined;
+  Results: {
+    results: SerializedResult[];
+    mode: 'leave_now' | 'arrive_by';
+    arriveByTime: string | null;
+  };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#0f0f0f' },
+            animation: 'slide_from_right',
+          }}
+        >
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Results" component={ResultsScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
