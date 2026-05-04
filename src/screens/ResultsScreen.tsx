@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -38,7 +38,14 @@ function formatSlack(slack: number | null): string {
   return `${Math.round(Math.abs(slack))} min late`;
 }
 
-function OccupancyBar({ percent, source }: { percent: number; source: 'live' | 'mocked' }) {
+function OccupancyBlock({ percent, source }: { percent: number; source: 'live' | 'mocked' | 'static' }) {
+  if (source === 'static') {
+    return (
+      <Text style={styles.staticOccupancyCaption}>
+        Downtown / public: Sparko does not track live fullness here. Check ParkSJ (parksj.org) or posted signs before you go.
+      </Text>
+    );
+  }
   const color = percent >= 95 ? '#ff453a' : percent >= 85 ? '#ffd60a' : '#30d158';
   return (
     <View>
@@ -56,6 +63,7 @@ function OccupancyBar({ percent, source }: { percent: number; source: 'live' | '
 export default function ResultsScreen({ navigation, route }: Props) {
   const { results, mode, arriveByTime } = route.params;
   const allRisky = results.every(r => r.bucket === 'Risky');
+  const hasDowntown = results.some(r => r.facility.region === 'downtown_sj');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,6 +122,17 @@ export default function ResultsScreen({ navigation, route }: Props) {
               {/* Address */}
               <Text style={styles.address}>{r.facility.address}</Text>
 
+              {r.facility.region === 'downtown_sj' && (
+                <View style={styles.regionRow}>
+                  <Text style={styles.regionPill}>Downtown San José · public</Text>
+                  {typeof r.facility.distanceFromCampusMi === 'number' && (
+                    <Text style={styles.distanceText}>
+                      ≈{r.facility.distanceFromCampusMi.toFixed(2)} mi walk to campus pin
+                    </Text>
+                  )}
+                </View>
+              )}
+
               {/* ETA row */}
               <View style={styles.statsRow}>
                 <View style={styles.stat}>
@@ -128,9 +147,11 @@ export default function ResultsScreen({ navigation, route }: Props) {
                   <Text style={styles.statValue}>
                     ${r.facility.dailyMax ?? `${r.facility.ratePerHour}/hr`}
                   </Text>
-                  <Text style={styles.statLabel}>Daily max</Text>
-                </View>
+                <Text style={styles.statLabel}>
+                  {r.facility.region === 'downtown_sj' ? 'Typical daily cap' : 'Daily max'}
+                </Text>
               </View>
+            </View>
 
               {/* Slack line */}
               {r.slackMinutes !== null && (
@@ -156,11 +177,20 @@ export default function ResultsScreen({ navigation, route }: Props) {
                 <Text style={styles.breakdownItem}>
                   🅿️ {r.eta.searchBufferMinutes} min find spot
                 </Text>
+                {r.eta.walkMinutes > 0 && (
+                  <Text style={styles.breakdownItem}>
+                    🚶 {r.eta.walkMinutes} min walk to campus pin
+                  </Text>
+                )}
               </View>
+
+              {r.facility.notes ? (
+                <Text style={styles.notes}>{r.facility.notes}</Text>
+              ) : null}
 
               {/* Occupancy bar */}
               {r.occupancy && (
-                <OccupancyBar
+                <OccupancyBlock
                   percent={r.occupancy.percent}
                   source={r.occupancy.source}
                 />
@@ -170,7 +200,9 @@ export default function ResultsScreen({ navigation, route }: Props) {
         })}
 
         <Text style={styles.footer}>
-          Occupancy from sjsuparkingstatus.sjsu.edu
+          {hasDowntown
+            ? 'SJSU garages: occupancy from sjsuparkingstatus.sjsu.edu when available. Downtown: static rates / distance — verify ParkSJ.'
+            : 'Occupancy from sjsuparkingstatus.sjsu.edu when available'}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -229,7 +261,15 @@ const styles = StyleSheet.create({
   riskBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8 },
   riskBadgeText: { fontSize: 12, fontWeight: '700' },
 
-  address: { color: MUTED, fontSize: 12, marginBottom: 14 },
+  address: { color: MUTED, fontSize: 12, marginBottom: 8 },
+
+  regionRow: { marginBottom: 12, gap: 6 },
+  regionPill: {
+    alignSelf: 'flex-start', backgroundColor: '#003570', color: GOLD,
+    fontSize: 11, fontWeight: '700', paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 8, overflow: 'hidden',
+  },
+  distanceText: { color: MUTED, fontSize: 12, marginTop: 4 },
 
   statsRow: { flexDirection: 'row', marginBottom: 12, gap: 0 },
   stat: { flex: 1 },
@@ -243,12 +283,19 @@ const styles = StyleSheet.create({
   },
   breakdownItem: { color: MUTED, fontSize: 12 },
 
+  notes: { color: MUTED, fontSize: 11, lineHeight: 15, marginBottom: 12, fontStyle: 'italic' },
+
   barTrack: {
     height: 4, backgroundColor: '#2c2c2e',
     borderRadius: 2, overflow: 'hidden', marginBottom: 4,
   },
   barFill: { height: '100%', borderRadius: 2 },
   occupancyLabel: { color: MUTED, fontSize: 11 },
+
+  staticOccupancyCaption: {
+    color: MUTED, fontSize: 11, lineHeight: 16,
+    backgroundColor: '#00357055', padding: 10, borderRadius: 8,
+  },
 
   footer: { color: '#3a3a3c', fontSize: 11, textAlign: 'center', marginTop: 8 },
 });

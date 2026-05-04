@@ -2,7 +2,14 @@
 // Coordinates sourced via OpenStreetMap Nominatim geocoding from real addresses.
 // Addresses confirmed via sjsuparkingstatus.sjsu.edu
 
+import { DOWNTOWN_PUBLIC_FACILITIES } from './downtownPublicParking';
+
 export type OptionType = 'drive_park_walk' | 'drive_park_shuttle_walk';
+
+export type FacilityRegion = 'sjsu' | 'downtown_sj';
+
+/** `sjsu` = SJSU status page when available; `none` = off-campus public (no live sensor in Sparko). */
+export type OccupancyTracking = 'sjsu' | 'none';
 
 export interface ParkingFacility {
   id: string;
@@ -17,6 +24,11 @@ export interface ParkingFacility {
   shuttleTransferMinutes?: number; // only for South Campus — time on shuttle to campus
   // Key used to match against sjsuparkingstatus.sjsu.edu HTML
   statusPageName: string;
+  /** SJSU on-campus entries omit this (treated as `sjsu`). */
+  region?: FacilityRegion;
+  occupancyTracking?: OccupancyTracking;
+  /** Static road-walk-ish distance to the SJSU pin (miles), for downtown public options. */
+  distanceFromCampusMi?: number;
 }
 
 // SJSU Geographic Center — single destination pin for all ETA calculations
@@ -88,3 +100,12 @@ export const SEARCH_BUFFER: Record<OptionType, number> = {
   drive_park_walk: 5,
   drive_park_shuttle_walk: 3, // lower demand = easier to find a spot
 };
+
+export { DOWNTOWN_PUBLIC_FACILITIES };
+
+/** Merge SJSU garages with downtown public inventory when the user opts in. */
+export function facilitiesForSearch(includeDowntownPublic: boolean): ParkingFacility[] {
+  return includeDowntownPublic
+    ? [...FACILITIES, ...DOWNTOWN_PUBLIC_FACILITIES]
+    : [...FACILITIES];
+}
