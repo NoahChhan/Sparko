@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Platform, ScrollView,
+  ActivityIndicator, ScrollView, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -11,19 +11,19 @@ import { FACILITIES } from '../data/inventory';
 import { getAllOccupancy } from '../data/occupancy';
 import { computeAllETAs } from '../engine/eta';
 import { rankOptions, RankingInput } from '../engine/ranking';
+import { computeTransitETA } from '../engine/transit';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Home'> };
-
 type Mode = 'leave_now' | 'arrive_by';
 
-// 5-min increment time slots for Arrive By picker (next 3 hours)
+interface GeoSuggestion { name: string; lat: number; lng: number; }
+
 function generateTimeSlots(): Date[] {
   const slots: Date[] = [];
   const now = new Date();
-  // Round up to next 5-min mark
   const ms = 5 * 60 * 1000;
   let t = new Date(Math.ceil(now.getTime() / ms) * ms);
-  for (let i = 0; i < 36; i++) {  // 36 × 5min = 3 hours
+  for (let i = 0; i < 36; i++) {
     slots.push(new Date(t));
     t = new Date(t.getTime() + ms);
   }
@@ -34,69 +34,138 @@ function formatTime(d: Date): string {
   return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
+const MAPBOX_KEY = process.env.EXPO_PUBLIC_MAPBOX_KEY ?? '';
+// San Jose city center — biases geocoding results toward the South Bay
+const SJ_LNG = -121.8853;
+const SJ_LAT = 37.3382;
+
 export default function HomeScreen({ navigation }: Props) {
   const [mode, setMode] = useState<Mode>('leave_now');
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [timeSlots] = useState(generateTimeSlots);
   const [loading, setLoading] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Pre-select the first time slot when switching to arrive_by
+  // Origin state
+  const [originLabel, setOriginLabel] = useState('My Location');
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isEditingOrigin, setIsEditingOrigin] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<TextInput>(null);
+
   useEffect(() => {
     if (mode === 'arrive_by' && !selectedSlot) {
-      setSelectedSlot(timeSlots[3]); // default ~15 min from now
+      setSelectedSlot(timeSlots[3]);
     }
   }, [mode]);
 
+  // Geocode as user types — debounced 400ms
+  function handleSearchChange(text: string) {
+    setSearchText(text);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      if (text.length < 3) { setSuggestions([]); return; }
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(text)}.json` +
+          `?proximity=${SJ_LNG},${SJ_LAT}&country=US&limit=4&access_token=${MAPBOX_KEY}`;
+        const res  = await fetch(url);
+        const json = await res.json();
+        setSuggestions(
+          (json.features ?? []).map((f: any) => ({
+            name: f.place_name as string,
+            lat:  f.center[1] as number,
+            lng:  f.center[0] as number,
+          }))
+        );
+      } catch { /* geocoding failure is non-fatal */ }
+    }, 400);
+  }
+
+  function selectSuggestion(s: GeoSuggestion) {
+    setOriginLabel(s.name);
+    setOriginCoords({ lat: s.lat, lng: s.lng });
+    setSearchText('');
+    setSuggestions([]);
+    setIsEditingOrigin(false);
+  }
+
+  function clearOrigin() {
+    setOriginLabel('My Location');
+    setOriginCoords(null);
+    setSearchText('');
+    setSuggestions([]);
+    setIsEditingOrigin(false);
+  }
+
+  function openOriginEditor() {
+    setIsEditingOrigin(true);
+    setSearchText('');
+    setSuggestions([]);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
   async function handleGo() {
     setLoading(true);
-    setLocationError(null);
+    setError(null);
 
     try {
-      // 1. Get location
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationError('Location permission denied. Enable it in Settings.');
-        setLoading(false);
-        return;
-      }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const { latitude, longitude } = loc.coords;
+      // Resolve coordinates — GPS if no custom origin is set
+      let latitude: number, longitude: number;
 
-      // 2. Fetch occupancy + ETAs in parallel
+      if (originCoords) {
+        latitude  = originCoords.lat;
+        longitude = originCoords.lng;
+      } else {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setError('Location permission denied. Enable it in Settings.');
+          setLoading(false);
+          return;
+        }
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        latitude  = loc.coords.latitude;
+        longitude = loc.coords.longitude;
+      }
+
+      // Fetch occupancy, drive ETAs, and transit ETA all in parallel
       const [occupancyMap, etas] = await Promise.all([
         getAllOccupancy(FACILITIES.map(f => f.id)),
         computeAllETAs(FACILITIES, latitude, longitude),
       ]);
+      const transitETA = computeTransitETA(latitude, longitude);
 
-      // 3. Build ranking inputs
+      // Rank parking options
       const inputs: RankingInput[] = FACILITIES.map((facility, i) => ({
         facility,
         eta: etas[i],
         occupancy: occupancyMap[facility.id],
       }));
-
-      // 4. Rank
       const arriveBy = mode === 'arrive_by' ? selectedSlot ?? undefined : undefined;
-      const results = rankOptions(inputs, mode, arriveBy);
+      const results  = rankOptions(inputs, mode, arriveBy);
 
-      // 5. Navigate
       navigation.navigate('Results', {
         results: results.map(r => ({
-          facility: r.facility,
-          eta: r.eta,
-          occupancy: r.occupancy,
-          arrivalTime: r.arrivalTime.toISOString(),
+          facility:     r.facility,
+          eta:          r.eta,
+          occupancy:    r.occupancy,
+          arrivalTime:  r.arrivalTime.toISOString(),
           slackMinutes: r.slackMinutes,
-          bucket: r.bucket,
-          score: r.score,
-          tags: r.tags,
+          bucket:       r.bucket,
+          score:        r.score,
+          tags:         r.tags,
         })),
         mode,
-        arriveByTime: arriveBy?.toISOString() ?? null,
+        arriveByTime:   arriveBy?.toISOString() ?? null,
+        transitResult:  transitETA
+          ? { ...transitETA, arrivalTime: new Date(Date.now() + transitETA.totalMinutes * 60000).toISOString() }
+          : null,
+        originLabel,
       });
-    } catch (e) {
-      setLocationError('Could not get your location. Try again.');
+    } catch {
+      setError('Something went wrong. Try again.');
     } finally {
       setLoading(false);
     }
@@ -106,10 +175,60 @@ export default function HomeScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logo}>Sparko</Text>
-        <Text style={styles.subtitle}>SJSU Parking Optimizer</Text>
+        <Text style={styles.subtitle}>SJSU Commute Optimizer</Text>
       </View>
 
-      {/* Mode toggle */}
+      {/* ── Leaving From ──────────────────────────────────────────── */}
+      <View style={styles.originSection}>
+        <Text style={styles.sectionLabel}>LEAVING FROM</Text>
+
+        {isEditingOrigin ? (
+          <View>
+            <View style={styles.originInputRow}>
+              <Text style={styles.originDot}>◎</Text>
+              <TextInput
+                ref={inputRef}
+                style={styles.originInput}
+                value={searchText}
+                onChangeText={handleSearchChange}
+                placeholder="Search address or place…"
+                placeholderTextColor={MUTED}
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              <TouchableOpacity onPress={clearOrigin} style={styles.clearBtn}>
+                <Text style={styles.clearBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {suggestions.length > 0 && (
+              <View style={styles.suggestionList}>
+                {suggestions.map((s, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.suggestionRow, i < suggestions.length - 1 && styles.suggestionBorder]}
+                    onPress={() => selectSuggestion(s)}
+                  >
+                    <Text style={styles.suggestionPin}>📍</Text>
+                    <Text style={styles.suggestionText} numberOfLines={2}>{s.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.originRow} onPress={openOriginEditor}>
+            <Text style={styles.originDot}>{originCoords ? '📍' : '◎'}</Text>
+            <Text style={styles.originLabel} numberOfLines={1}>{originLabel}</Text>
+            {originCoords && (
+              <TouchableOpacity onPress={clearOrigin} style={styles.clearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.clearBtnText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* ── Mode toggle ───────────────────────────────────────────── */}
       <View style={styles.modeRow}>
         <TouchableOpacity
           style={[styles.modeBtn, mode === 'leave_now' && styles.modeBtnActive]}
@@ -129,24 +248,18 @@ export default function HomeScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Time picker — only shown in arrive_by mode */}
+      {/* ── Arrive By time picker ─────────────────────────────────── */}
       {mode === 'arrive_by' && (
         <View style={styles.pickerSection}>
-          <Text style={styles.pickerLabel}>Arrive by</Text>
+          <Text style={styles.sectionLabel}>ARRIVE BY</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.slotScroll}>
             {timeSlots.map((slot, i) => (
               <TouchableOpacity
                 key={i}
-                style={[
-                  styles.slot,
-                  selectedSlot?.getTime() === slot.getTime() && styles.slotSelected,
-                ]}
+                style={[styles.slot, selectedSlot?.getTime() === slot.getTime() && styles.slotSelected]}
                 onPress={() => setSelectedSlot(slot)}
               >
-                <Text style={[
-                  styles.slotText,
-                  selectedSlot?.getTime() === slot.getTime() && styles.slotTextSelected,
-                ]}>
+                <Text style={[styles.slotText, selectedSlot?.getTime() === slot.getTime() && styles.slotTextSelected]}>
                   {formatTime(slot)}
                 </Text>
               </TouchableOpacity>
@@ -155,9 +268,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       )}
 
-      {locationError && (
-        <Text style={styles.errorText}>{locationError}</Text>
-      )}
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity
         style={[styles.goBtn, loading && styles.goBtnDisabled]}
@@ -166,45 +277,86 @@ export default function HomeScreen({ navigation }: Props) {
       >
         {loading
           ? <ActivityIndicator color="#000" />
-          : <Text style={styles.goBtnText}>Find Parking</Text>
+          : <Text style={styles.goBtnText}>Plan My Commute</Text>
         }
       </TouchableOpacity>
-
-      <Text style={styles.hint}>Uses your current GPS location</Text>
     </SafeAreaView>
   );
 }
 
-const GOLD = '#E5A823';
-const BG = '#0055A2';
-const CARD = '#004080';
-const TEXT = '#ffffff';
+const GOLD  = '#E5A823';
+const BG    = '#0055A2';
+const CARD  = '#004080';
+const TEXT  = '#ffffff';
 const MUTED = '#A8C8F0';
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG, paddingHorizontal: 24 },
-  header: { marginTop: 32, marginBottom: 40 },
-  logo: { fontSize: 36, fontWeight: '800', color: GOLD, letterSpacing: -1 },
+
+  header: { marginTop: 32, marginBottom: 28 },
+  logo:     { fontSize: 36, fontWeight: '800', color: GOLD, letterSpacing: -1 },
   subtitle: { fontSize: 14, color: MUTED, marginTop: 4 },
 
+  sectionLabel: {
+    color: MUTED, fontSize: 11, fontWeight: '700',
+    letterSpacing: 1, marginBottom: 8, textTransform: 'uppercase',
+  },
+
+  // ── Origin input ──────────────────────────────────────────────────
+  originSection: { marginBottom: 24 },
+
+  originRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: CARD, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 14,
+  },
+  originDot:   { fontSize: 16, marginRight: 10, color: GOLD },
+  originLabel: { flex: 1, color: TEXT, fontSize: 15, fontWeight: '500' },
+
+  originInputRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: CARD, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 10,
+  },
+  originInput: {
+    flex: 1, color: TEXT, fontSize: 15,
+    paddingVertical: 4,
+  },
+
+  clearBtn:     { padding: 4 },
+  clearBtnText: { color: MUTED, fontSize: 16, fontWeight: '600' },
+
+  suggestionList: {
+    backgroundColor: CARD, borderRadius: 12,
+    marginTop: 4, overflow: 'hidden',
+  },
+  suggestionRow: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  suggestionBorder: { borderBottomWidth: 1, borderBottomColor: '#1A6BC4' },
+  suggestionPin:    { fontSize: 14, marginRight: 10, marginTop: 1 },
+  suggestionText:   { flex: 1, color: TEXT, fontSize: 14 },
+
+  // ── Mode toggle ───────────────────────────────────────────────────
   modeRow: {
     flexDirection: 'row', backgroundColor: CARD,
-    borderRadius: 12, padding: 4, marginBottom: 32,
+    borderRadius: 12, padding: 4, marginBottom: 24,
   },
-  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: GOLD },
-  modeBtnText: { color: MUTED, fontWeight: '600', fontSize: 15 },
+  modeBtn:           { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+  modeBtnActive:     { backgroundColor: GOLD },
+  modeBtnText:       { color: MUTED, fontWeight: '600', fontSize: 15 },
   modeBtnTextActive: { color: '#000' },
 
-  pickerSection: { marginBottom: 32 },
-  pickerLabel: { color: MUTED, fontSize: 12, fontWeight: '600', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
-  slotScroll: { flexGrow: 0 },
+  // ── Time picker ───────────────────────────────────────────────────
+  pickerSection: { marginBottom: 24 },
+  slotScroll:    { flexGrow: 0 },
   slot: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10,
-    backgroundColor: CARD, marginRight: 8,
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 10, backgroundColor: CARD, marginRight: 8,
   },
-  slotSelected: { backgroundColor: GOLD },
-  slotText: { color: TEXT, fontSize: 14, fontWeight: '500' },
+  slotSelected:     { backgroundColor: GOLD },
+  slotText:         { color: TEXT, fontSize: 14, fontWeight: '500' },
   slotTextSelected: { color: '#000', fontWeight: '700' },
 
   errorText: { color: '#ff453a', fontSize: 14, marginBottom: 16, textAlign: 'center' },
@@ -214,7 +366,5 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginTop: 'auto', marginBottom: 8,
   },
   goBtnDisabled: { opacity: 0.6 },
-  goBtnText: { color: '#000', fontSize: 17, fontWeight: '800' },
-
-  hint: { color: MUTED, fontSize: 12, textAlign: 'center', marginBottom: 8 },
+  goBtnText:     { color: '#000', fontSize: 17, fontWeight: '800' },
 });

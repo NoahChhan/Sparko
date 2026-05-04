@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
 import { RiskBucket, ResultTag } from '../engine/ranking';
+import { SerializedTransitResult } from '../../App';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Results'>;
@@ -53,8 +54,57 @@ function OccupancyBar({ percent, source }: { percent: number; source: 'live' | '
   );
 }
 
+function TransitCard({ t }: { t: SerializedTransitResult }) {
+  return (
+    <View style={transitStyles.card}>
+      <View style={transitStyles.topRow}>
+        <View style={transitStyles.routeBadge}>
+          <Text style={transitStyles.routeBadgeText}>🚌 Line {t.shortName}</Text>
+        </View>
+        <Text style={transitStyles.arrivalTime}>{formatTime(t.arrivalTime)}</Text>
+      </View>
+
+      <Text style={transitStyles.longName} numberOfLines={1}>{t.longName}</Text>
+
+      <View style={transitStyles.statsRow}>
+        <View style={transitStyles.stat}>
+          <Text style={transitStyles.statValue}>{Math.round(t.totalMinutes)} min</Text>
+          <Text style={transitStyles.statLabel}>Total</Text>
+        </View>
+        <View style={transitStyles.stat}>
+          <Text style={transitStyles.statValue}>$2.50</Text>
+          <Text style={transitStyles.statLabel}>Flat fare</Text>
+        </View>
+        <View style={transitStyles.stat}>
+          <Text style={transitStyles.statValue}>~{t.headwayMinutes} min</Text>
+          <Text style={transitStyles.statLabel}>Bus interval</Text>
+        </View>
+      </View>
+
+      <View style={transitStyles.breakdown}>
+        <Text style={transitStyles.breakdownItem}>🚶 {Math.round(t.walkToStopMinutes)} min walk to stop</Text>
+        <Text style={transitStyles.breakdownItem}>⏱ ~{Math.round(t.waitMinutes)} min wait</Text>
+        <Text style={transitStyles.breakdownItem}>🚌 {Math.round(t.rideMinutes)} min ride</Text>
+        <Text style={transitStyles.breakdownItem}>🚶 {Math.round(t.walkFromStopMinutes)} min to campus</Text>
+      </View>
+
+      <Text style={transitStyles.stopLine} numberOfLines={1}>
+        Board at {t.boardingStopName}
+      </Text>
+
+      {t.longWalkWarning && (
+        <View style={transitStyles.warningRow}>
+          <Text style={transitStyles.warningText}>
+            ⚠️  Long walk to stop — driving is likely faster from here
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function ResultsScreen({ navigation, route }: Props) {
-  const { results, mode, arriveByTime } = route.params;
+  const { results, mode, arriveByTime, transitResult, originLabel } = route.params;
   const allRisky = results.every(r => r.bucket === 'Risky');
 
   return (
@@ -68,6 +118,7 @@ export default function ResultsScreen({ navigation, route }: Props) {
           <Text style={styles.headerMode}>
             {mode === 'leave_now' ? 'Leaving now' : `Arrive by ${formatTime(arriveByTime!)}`}
           </Text>
+          <Text style={styles.headerOrigin} numberOfLines={1}>From {originLabel}</Text>
         </View>
       </View>
 
@@ -84,6 +135,8 @@ export default function ResultsScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
       >
+        {transitResult && <TransitCard t={transitResult} />}
+
         {results.map((r, i) => {
           const bucket = BUCKET_CONFIG[r.bucket as RiskBucket];
           const isFirst = i === 0;
@@ -194,8 +247,9 @@ const styles = StyleSheet.create({
   },
   backBtn: { paddingRight: 16 },
   backText: { color: GOLD, fontSize: 16, fontWeight: '600' },
-  headerMeta: { flex: 1 },
-  headerMode: { color: TEXT, fontSize: 16, fontWeight: '700' },
+  headerMeta:   { flex: 1 },
+  headerMode:   { color: TEXT, fontSize: 16, fontWeight: '700' },
+  headerOrigin: { color: MUTED, fontSize: 12, marginTop: 2 },
 
   riskyBanner: {
     marginHorizontal: 16, marginBottom: 12,
@@ -251,4 +305,47 @@ const styles = StyleSheet.create({
   occupancyLabel: { color: MUTED, fontSize: 11 },
 
   footer: { color: '#3a3a3c', fontSize: 11, textAlign: 'center', marginTop: 8 },
+});
+
+const TRANSIT_CARD = '#0A3D2E';
+const TRANSIT_BORDER = '#1A7A55';
+const TRANSIT_TEXT = '#ffffff';
+const TRANSIT_MUTED = '#7EC8A4';
+const TRANSIT_GREEN = '#30d158';
+
+const transitStyles = StyleSheet.create({
+  card: {
+    backgroundColor: TRANSIT_CARD, borderRadius: 16,
+    padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: TRANSIT_BORDER,
+  },
+  topRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 4,
+  },
+  routeBadge: {
+    backgroundColor: '#0F5C40', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderColor: TRANSIT_GREEN,
+  },
+  routeBadgeText: { color: TRANSIT_GREEN, fontSize: 13, fontWeight: '700' },
+  arrivalTime:    { color: TRANSIT_TEXT, fontSize: 15, fontWeight: '700' },
+  longName:       { color: TRANSIT_MUTED, fontSize: 12, marginBottom: 14 },
+
+  statsRow: { flexDirection: 'row', marginBottom: 12 },
+  stat:      { flex: 1 },
+  statValue: { color: TRANSIT_TEXT, fontSize: 16, fontWeight: '700' },
+  statLabel: { color: TRANSIT_MUTED, fontSize: 11, marginTop: 2 },
+
+  breakdown: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  breakdownItem: { color: TRANSIT_MUTED, fontSize: 12 },
+
+  stopLine: { color: TRANSIT_MUTED, fontSize: 11, fontStyle: 'italic' },
+
+  warningRow: {
+    marginTop: 10, backgroundColor: '#2E1A00',
+    borderRadius: 8, padding: 8,
+    borderWidth: 1, borderColor: '#7A4500',
+  },
+  warningText: { color: '#FF9F0A', fontSize: 12, fontWeight: '500' },
 });

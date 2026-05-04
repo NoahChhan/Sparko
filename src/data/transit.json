@@ -1,0 +1,851 @@
+{
+  "generated": "2026-05-04T01:08:29.261Z",
+  "sjsuStops": [
+    {
+      "stopId": "2943",
+      "name": "7th & Santa Clara",
+      "lat": 37.338455,
+      "lng": -121.883729
+    },
+    {
+      "stopId": "2944",
+      "name": "San Fernando & 7th",
+      "lat": 37.337239,
+      "lng": -121.883233
+    },
+    {
+      "stopId": "3735",
+      "name": "San Fernando & 7th",
+      "lat": 37.337508,
+      "lng": -121.882384
+    },
+    {
+      "stopId": "3736",
+      "name": "San Carlos & 10th",
+      "lat": 37.336102,
+      "lng": -121.877166
+    },
+    {
+      "stopId": "3800",
+      "name": "10th & San Antonio",
+      "lat": 37.337152,
+      "lng": -121.878477
+    },
+    {
+      "stopId": "3801",
+      "name": "10th & San Salvador",
+      "lat": 37.334329,
+      "lng": -121.876362
+    }
+  ],
+  "routes": [
+    {
+      "routeId": "523",
+      "shortName": "Rapid 523",
+      "longName": "San Jose State - Lockheed Martin via De Anza",
+      "headwayMinutes": 3,
+      "stops": [
+        {
+          "stopId": "565",
+          "name": "Stevens Creek & Stelling",
+          "lat": 37.322736,
+          "lng": -122.040933,
+          "sequence": 1,
+          "arrivalMin": 437
+        },
+        {
+          "stopId": "567",
+          "name": "Stevens Creek & De Anza",
+          "lat": 37.322734,
+          "lng": -122.031473,
+          "sequence": 2,
+          "arrivalMin": 438
+        },
+        {
+          "stopId": "571",
+          "name": "Stevens Creek & Miller",
+          "lat": 37.322809,
+          "lng": -122.013716,
+          "sequence": 3,
+          "arrivalMin": 442
+        },
+        {
+          "stopId": "574",
+          "name": "Stevens Creek & Stern",
+          "lat": 37.322872,
+          "lng": -122.002992,
+          "sequence": 4,
+          "arrivalMin": 443
+        },
+        {
+          "stopId": "576",
+          "name": "Stevens Creek & Loma Linda",
+          "lat": 37.322919,
+          "lng": -121.992759,
+          "sequence": 5,
+          "arrivalMin": 444
+        },
+        {
+          "stopId": "582",
+          "name": "Stevens Creek & Kiely",
+          "lat": 37.323038,
+          "lng": -121.974324,
+          "sequence": 6,
+          "arrivalMin": 447
+        },
+        {
+          "stopId": "586",
+          "name": "Stevens Creek & Cypress",
+          "lat": 37.323139,
+          "lng": -121.959381,
+          "sequence": 7,
+          "arrivalMin": 449
+        },
+        {
+          "stopId": "4650",
+          "name": "Stevens Creek & Winchester",
+          "lat": 37.323188,
+          "lng": -121.951087,
+          "sequence": 8,
+          "arrivalMin": 451
+        },
+        {
+          "stopId": "5740",
+          "name": "Stevens Creek & Santana Row / Valley Fair",
+          "lat": 37.323251,
+          "lng": -121.947317,
+          "sequence": 9,
+          "arrivalMin": 451
+        },
+        {
+          "stopId": "594",
+          "name": "San Carlos & Bascom",
+          "lat": 37.323286,
+          "lng": -121.931157,
+          "sequence": 10,
+          "arrivalMin": 455
+        },
+        {
+          "stopId": "600",
+          "name": "San Carlos & Grand",
+          "lat": 37.323367,
+          "lng": -121.912531,
+          "sequence": 11,
+          "arrivalMin": 457
+        },
+        {
+          "stopId": "603",
+          "name": "San Carlos & Barack Obama",
+          "lat": 37.324858,
+          "lng": -121.899854,
+          "sequence": 12,
+          "arrivalMin": 460
+        },
+        {
+          "stopId": "607",
+          "name": "San Carlos & Convention Center",
+          "lat": 37.330346,
+          "lng": -121.889048,
+          "sequence": 13,
+          "arrivalMin": 464
+        },
+        {
+          "stopId": "5459",
+          "name": "1st & Paseo de San Antonio",
+          "lat": 37.332666,
+          "lng": -121.887921,
+          "sequence": 14,
+          "arrivalMin": 465
+        },
+        {
+          "stopId": "5850",
+          "name": "Santa Clara & 2nd",
+          "lat": 37.336489,
+          "lng": -121.889664,
+          "sequence": 15,
+          "arrivalMin": 467
+        },
+        {
+          "stopId": "413",
+          "name": "Santa Clara & 6th",
+          "lat": 37.338508,
+          "lng": -121.885378,
+          "sequence": 16,
+          "arrivalMin": 469
+        },
+        {
+          "stopId": "2943",
+          "name": "7th & Santa Clara",
+          "lat": 37.338455,
+          "lng": -121.883729,
+          "sequence": 17,
+          "arrivalMin": 470
+        }
+      ]
+    },
+    {
+      "routeId": "72",
+      "shortName": "72",
+      "longName": "Dtwn SJ - Senter & Monterey via McLaughlin",
+      "headwayMinutes": 2,
+      "stops": [
+        {
+          "stopId": "613",
+          "name": "2nd & Bassett",
+          "lat": 37.341839,
+          "lng": -121.893454,
+          "sequence": 1,
+          "arrivalMin": 464
+        },
+        {
+          "stopId": "614",
+          "name": "2nd & Julian",
+          "lat": 37.340702,
+          "lng": -121.892545,
+          "sequence": 2,
+          "arrivalMin": 464
+        },
+        {
+          "stopId": "5464",
+          "name": "2nd & Saint John",
+          "lat": 37.338502,
+          "lng": -121.89088,
+          "sequence": 3,
+          "arrivalMin": 465
+        },
+        {
+          "stopId": "5515",
+          "name": "2nd & Santa Clara",
+          "lat": 37.336788,
+          "lng": -121.889631,
+          "sequence": 4,
+          "arrivalMin": 466
+        },
+        {
+          "stopId": "413",
+          "name": "Santa Clara & 6th",
+          "lat": 37.338508,
+          "lng": -121.885378,
+          "sequence": 5,
+          "arrivalMin": 467
+        },
+        {
+          "stopId": "3735",
+          "name": "San Fernando & 7th",
+          "lat": 37.337508,
+          "lng": -121.882384,
+          "sequence": 6,
+          "arrivalMin": 468
+        },
+        {
+          "stopId": "3736",
+          "name": "San Carlos & 10th",
+          "lat": 37.336102,
+          "lng": -121.877166,
+          "sequence": 7,
+          "arrivalMin": 470
+        },
+        {
+          "stopId": "3737",
+          "name": "San Carlos & 13th",
+          "lat": 37.337246,
+          "lng": -121.874748,
+          "sequence": 8,
+          "arrivalMin": 471
+        },
+        {
+          "stopId": "3739",
+          "name": "San Carlos & 17th",
+          "lat": 37.339076,
+          "lng": -121.870922,
+          "sequence": 9,
+          "arrivalMin": 472
+        },
+        {
+          "stopId": "3740",
+          "name": "San Antonio & 18th",
+          "lat": 37.340637,
+          "lng": -121.870204,
+          "sequence": 10,
+          "arrivalMin": 473
+        },
+        {
+          "stopId": "3741",
+          "name": "San Antonio & 21st",
+          "lat": 37.342526,
+          "lng": -121.867187,
+          "sequence": 11,
+          "arrivalMin": 474
+        },
+        {
+          "stopId": "3742",
+          "name": "San Antonio & 24th",
+          "lat": 37.343923,
+          "lng": -121.864942,
+          "sequence": 12,
+          "arrivalMin": 475
+        },
+        {
+          "stopId": "5006",
+          "name": "McLaughlin & William",
+          "lat": 37.34069,
+          "lng": -121.861648,
+          "sequence": 13,
+          "arrivalMin": 476
+        },
+        {
+          "stopId": "5007",
+          "name": "McLaughlin & Appian",
+          "lat": 37.338212,
+          "lng": -121.859212,
+          "sequence": 14,
+          "arrivalMin": 478
+        },
+        {
+          "stopId": "3743",
+          "name": "McLaughlin & I-280",
+          "lat": 37.335275,
+          "lng": -121.856317,
+          "sequence": 15,
+          "arrivalMin": 479
+        },
+        {
+          "stopId": "3744",
+          "name": "McLaughlin & Story",
+          "lat": 37.3323,
+          "lng": -121.853394,
+          "sequence": 16,
+          "arrivalMin": 481
+        },
+        {
+          "stopId": "3745",
+          "name": "McLaughlin & Winslow",
+          "lat": 37.330338,
+          "lng": -121.851459,
+          "sequence": 17,
+          "arrivalMin": 481
+        },
+        {
+          "stopId": "3746",
+          "name": "McLaughlin & Carnelian",
+          "lat": 37.328539,
+          "lng": -121.849699,
+          "sequence": 18,
+          "arrivalMin": 482
+        },
+        {
+          "stopId": "3748",
+          "name": "McLaughlin & Phelan",
+          "lat": 37.3249,
+          "lng": -121.846141,
+          "sequence": 19,
+          "arrivalMin": 484
+        },
+        {
+          "stopId": "3749",
+          "name": "McLaughlin & Glenfinnan",
+          "lat": 37.322156,
+          "lng": -121.843465,
+          "sequence": 20,
+          "arrivalMin": 485
+        },
+        {
+          "stopId": "3750",
+          "name": "McLaughlin & Summerside",
+          "lat": 37.318018,
+          "lng": -121.83942,
+          "sequence": 21,
+          "arrivalMin": 486
+        },
+        {
+          "stopId": "3752",
+          "name": "McLaughlin & Tully",
+          "lat": 37.31544,
+          "lng": -121.836911,
+          "sequence": 22,
+          "arrivalMin": 488
+        },
+        {
+          "stopId": "3753",
+          "name": "McLaughlin & Candia",
+          "lat": 37.312417,
+          "lng": -121.833977,
+          "sequence": 23,
+          "arrivalMin": 489
+        },
+        {
+          "stopId": "3754",
+          "name": "McLaughlin & Mallott",
+          "lat": 37.309467,
+          "lng": -121.831128,
+          "sequence": 24,
+          "arrivalMin": 490
+        },
+        {
+          "stopId": "3755",
+          "name": "McLaughlin & Umbarger",
+          "lat": 37.306388,
+          "lng": -121.828156,
+          "sequence": 25,
+          "arrivalMin": 491
+        },
+        {
+          "stopId": "3756",
+          "name": "McLaughlin & Sylvia",
+          "lat": 37.304613,
+          "lng": -121.82644,
+          "sequence": 26,
+          "arrivalMin": 492
+        },
+        {
+          "stopId": "3757",
+          "name": "McLaughlin & Shadowfax",
+          "lat": 37.30137,
+          "lng": -121.822096,
+          "sequence": 27,
+          "arrivalMin": 493
+        },
+        {
+          "stopId": "3758",
+          "name": "McLaughlin & Capitol",
+          "lat": 37.299949,
+          "lng": -121.820646,
+          "sequence": 28,
+          "arrivalMin": 494
+        },
+        {
+          "stopId": "3759",
+          "name": "McLaughlin & Theoden",
+          "lat": 37.298273,
+          "lng": -121.818384,
+          "sequence": 29,
+          "arrivalMin": 494
+        },
+        {
+          "stopId": "3760",
+          "name": "McLaughlin & Muriel",
+          "lat": 37.296336,
+          "lng": -121.816391,
+          "sequence": 30,
+          "arrivalMin": 495
+        },
+        {
+          "stopId": "3761",
+          "name": "McLaughlin & Valdosta",
+          "lat": 37.294609,
+          "lng": -121.815166,
+          "sequence": 31,
+          "arrivalMin": 495
+        },
+        {
+          "stopId": "3762",
+          "name": "Yerba Buena & McLaughlin",
+          "lat": 37.291888,
+          "lng": -121.81427,
+          "sequence": 32,
+          "arrivalMin": 496
+        },
+        {
+          "stopId": "3763",
+          "name": "Yerba Buena & Tuers",
+          "lat": 37.290695,
+          "lng": -121.817664,
+          "sequence": 33,
+          "arrivalMin": 497
+        },
+        {
+          "stopId": "3764",
+          "name": "Yerba Buena & Sunbrook",
+          "lat": 37.288738,
+          "lng": -121.820467,
+          "sequence": 34,
+          "arrivalMin": 498
+        },
+        {
+          "stopId": "3765",
+          "name": "Sylvandale & Nash",
+          "lat": 37.287914,
+          "lng": -121.824474,
+          "sequence": 35,
+          "arrivalMin": 499
+        },
+        {
+          "stopId": "3585",
+          "name": "Senter & Buckeye",
+          "lat": 37.287474,
+          "lng": -121.827721,
+          "sequence": 36,
+          "arrivalMin": 500
+        },
+        {
+          "stopId": "3586",
+          "name": "Senter & Forestbrook",
+          "lat": 37.283677,
+          "lng": -121.824415,
+          "sequence": 37,
+          "arrivalMin": 501
+        },
+        {
+          "stopId": "3588",
+          "name": "Senter & Coyote",
+          "lat": 37.279617,
+          "lng": -121.8235,
+          "sequence": 38,
+          "arrivalMin": 502
+        },
+        {
+          "stopId": "3589",
+          "name": "Senter & San Ramon",
+          "lat": 37.278178,
+          "lng": -121.827161,
+          "sequence": 39,
+          "arrivalMin": 503
+        },
+        {
+          "stopId": "3591",
+          "name": "Senter & Monterey",
+          "lat": 37.278172,
+          "lng": -121.834118,
+          "sequence": 40,
+          "arrivalMin": 505
+        },
+        {
+          "stopId": "1715",
+          "name": "Monterey & Senter",
+          "lat": 37.277459,
+          "lng": -121.834917,
+          "sequence": 41,
+          "arrivalMin": 505
+        },
+        {
+          "stopId": "1784",
+          "name": "Monterey & Skyway",
+          "lat": 37.271636,
+          "lng": -121.828125,
+          "sequence": 42,
+          "arrivalMin": 509
+        },
+        {
+          "stopId": "1780",
+          "name": "Monterey & Branham",
+          "lat": 37.268085,
+          "lng": -121.822477,
+          "sequence": 43,
+          "arrivalMin": 512
+        },
+        {
+          "stopId": "1781",
+          "name": "Monterey & Valleyhaven",
+          "lat": 37.270464,
+          "lng": -121.825838,
+          "sequence": 44,
+          "arrivalMin": 513
+        },
+        {
+          "stopId": "1782",
+          "name": "Monterey & Skyway",
+          "lat": 37.272969,
+          "lng": -121.829388,
+          "sequence": 45,
+          "arrivalMin": 514
+        },
+        {
+          "stopId": "3705",
+          "name": "Senter & Monterey",
+          "lat": 37.277995,
+          "lng": -121.833445,
+          "sequence": 46,
+          "arrivalMin": 517
+        }
+      ]
+    },
+    {
+      "routeId": "73",
+      "shortName": "73",
+      "longName": "Dtwn SJ - Senter & Monterey via Senter",
+      "headwayMinutes": 1,
+      "stops": [
+        {
+          "stopId": "613",
+          "name": "2nd & Bassett",
+          "lat": 37.341839,
+          "lng": -121.893454,
+          "sequence": 1,
+          "arrivalMin": 459
+        },
+        {
+          "stopId": "614",
+          "name": "2nd & Julian",
+          "lat": 37.340702,
+          "lng": -121.892545,
+          "sequence": 2,
+          "arrivalMin": 459
+        },
+        {
+          "stopId": "5464",
+          "name": "2nd & Saint John",
+          "lat": 37.338502,
+          "lng": -121.89088,
+          "sequence": 3,
+          "arrivalMin": 460
+        },
+        {
+          "stopId": "5515",
+          "name": "2nd & Santa Clara",
+          "lat": 37.336788,
+          "lng": -121.889631,
+          "sequence": 4,
+          "arrivalMin": 461
+        },
+        {
+          "stopId": "413",
+          "name": "Santa Clara & 6th",
+          "lat": 37.338508,
+          "lng": -121.885378,
+          "sequence": 5,
+          "arrivalMin": 462
+        },
+        {
+          "stopId": "3735",
+          "name": "San Fernando & 7th",
+          "lat": 37.337508,
+          "lng": -121.882384,
+          "sequence": 6,
+          "arrivalMin": 463
+        },
+        {
+          "stopId": "3800",
+          "name": "10th & San Antonio",
+          "lat": 37.337152,
+          "lng": -121.878477,
+          "sequence": 7,
+          "arrivalMin": 465
+        },
+        {
+          "stopId": "3801",
+          "name": "10th & San Salvador",
+          "lat": 37.334329,
+          "lng": -121.876362,
+          "sequence": 8,
+          "arrivalMin": 466
+        },
+        {
+          "stopId": "3802",
+          "name": "10th & Reed",
+          "lat": 37.331416,
+          "lng": -121.874189,
+          "sequence": 9,
+          "arrivalMin": 468
+        },
+        {
+          "stopId": "3803",
+          "name": "10th & Martha",
+          "lat": 37.326973,
+          "lng": -121.870912,
+          "sequence": 10,
+          "arrivalMin": 470
+        },
+        {
+          "stopId": "757",
+          "name": "Keyes & 10th",
+          "lat": 37.324383,
+          "lng": -121.868189,
+          "sequence": 11,
+          "arrivalMin": 472
+        },
+        {
+          "stopId": "758",
+          "name": "Keyes & 12th",
+          "lat": 37.325234,
+          "lng": -121.866367,
+          "sequence": 12,
+          "arrivalMin": 473
+        },
+        {
+          "stopId": "3804",
+          "name": "Senter & Alma",
+          "lat": 37.321352,
+          "lng": -121.861742,
+          "sequence": 13,
+          "arrivalMin": 474
+        },
+        {
+          "stopId": "3805",
+          "name": "Senter & Phelan",
+          "lat": 37.317965,
+          "lng": -121.858485,
+          "sequence": 14,
+          "arrivalMin": 476
+        },
+        {
+          "stopId": "3806",
+          "name": "Senter & Needles",
+          "lat": 37.316232,
+          "lng": -121.856836,
+          "sequence": 15,
+          "arrivalMin": 477
+        },
+        {
+          "stopId": "3808",
+          "name": "Senter & Burke",
+          "lat": 37.311025,
+          "lng": -121.851122,
+          "sequence": 16,
+          "arrivalMin": 479
+        },
+        {
+          "stopId": "3809",
+          "name": "Senter & Tully",
+          "lat": 37.30753,
+          "lng": -121.847452,
+          "sequence": 17,
+          "arrivalMin": 481
+        },
+        {
+          "stopId": "3810",
+          "name": "Senter & Baltic",
+          "lat": 37.305214,
+          "lng": -121.845214,
+          "sequence": 18,
+          "arrivalMin": 482
+        },
+        {
+          "stopId": "3812",
+          "name": "Senter & Umbarger",
+          "lat": 37.301486,
+          "lng": -121.841632,
+          "sequence": 19,
+          "arrivalMin": 484
+        },
+        {
+          "stopId": "3813",
+          "name": "Senter & Balfour",
+          "lat": 37.299931,
+          "lng": -121.840114,
+          "sequence": 20,
+          "arrivalMin": 485
+        },
+        {
+          "stopId": "3814",
+          "name": "Senter & Lewis",
+          "lat": 37.297938,
+          "lng": -121.838086,
+          "sequence": 21,
+          "arrivalMin": 486
+        },
+        {
+          "stopId": "3816",
+          "name": "Senter & Southside",
+          "lat": 37.294771,
+          "lng": -121.834794,
+          "sequence": 22,
+          "arrivalMin": 487
+        },
+        {
+          "stopId": "3583",
+          "name": "Senter & Capitol",
+          "lat": 37.292699,
+          "lng": -121.832646,
+          "sequence": 23,
+          "arrivalMin": 489
+        },
+        {
+          "stopId": "3584",
+          "name": "Senter & Singleton",
+          "lat": 37.29036,
+          "lng": -121.830221,
+          "sequence": 24,
+          "arrivalMin": 490
+        },
+        {
+          "stopId": "3585",
+          "name": "Senter & Buckeye",
+          "lat": 37.287474,
+          "lng": -121.827721,
+          "sequence": 25,
+          "arrivalMin": 491
+        },
+        {
+          "stopId": "3586",
+          "name": "Senter & Forestbrook",
+          "lat": 37.283677,
+          "lng": -121.824415,
+          "sequence": 26,
+          "arrivalMin": 492
+        },
+        {
+          "stopId": "3588",
+          "name": "Senter & Coyote",
+          "lat": 37.279617,
+          "lng": -121.8235,
+          "sequence": 27,
+          "arrivalMin": 494
+        },
+        {
+          "stopId": "3589",
+          "name": "Senter & San Ramon",
+          "lat": 37.278178,
+          "lng": -121.827161,
+          "sequence": 28,
+          "arrivalMin": 495
+        },
+        {
+          "stopId": "3591",
+          "name": "Senter & Monterey",
+          "lat": 37.278172,
+          "lng": -121.834118,
+          "sequence": 29,
+          "arrivalMin": 497
+        },
+        {
+          "stopId": "1715",
+          "name": "Monterey & Senter",
+          "lat": 37.277459,
+          "lng": -121.834917,
+          "sequence": 30,
+          "arrivalMin": 497
+        },
+        {
+          "stopId": "1784",
+          "name": "Monterey & Skyway",
+          "lat": 37.271636,
+          "lng": -121.828125,
+          "sequence": 31,
+          "arrivalMin": 501
+        },
+        {
+          "stopId": "1780",
+          "name": "Monterey & Branham",
+          "lat": 37.268085,
+          "lng": -121.822477,
+          "sequence": 32,
+          "arrivalMin": 504
+        },
+        {
+          "stopId": "1781",
+          "name": "Monterey & Valleyhaven",
+          "lat": 37.270464,
+          "lng": -121.825838,
+          "sequence": 33,
+          "arrivalMin": 505
+        },
+        {
+          "stopId": "1782",
+          "name": "Monterey & Skyway",
+          "lat": 37.272969,
+          "lng": -121.829388,
+          "sequence": 34,
+          "arrivalMin": 506
+        },
+        {
+          "stopId": "5980",
+          "name": "Senter & Monterey",
+          "lat": 37.277988,
+          "lng": -121.833784,
+          "sequence": 35,
+          "arrivalMin": 509
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import { ParkingFacility } from './src/data/inventory';
 import { OccupancyResult } from './src/data/occupancy';
 import { ETABreakdown } from './src/engine/eta';
 import { RiskBucket, ResultTag } from './src/engine/ranking';
+import { TransitETA } from './src/engine/transit';
 
 // Serialized result — navigation params must be JSON-serializable
 export type SerializedResult = {
@@ -23,12 +24,18 @@ export type SerializedResult = {
   tags: ResultTag[];
 };
 
+export type SerializedTransitResult = TransitETA & {
+  arrivalTime: string; // ISO string
+};
+
 export type RootStackParamList = {
   Home: undefined;
   Results: {
     results: SerializedResult[];
     mode: 'leave_now' | 'arrive_by';
     arriveByTime: string | null;
+    transitResult: SerializedTransitResult | null;
+    originLabel: string;
   };
 };
 

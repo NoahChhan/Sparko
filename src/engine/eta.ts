@@ -91,7 +91,7 @@ async function fetchMapboxDriveMinutes(
 ): Promise<number | null> {
   if (!MAPBOX_KEY) return null;
   const url =
-    `https://api.mapbox.com/directions/v5/mapbox/driving` +
+    `https://api.mapbox.com/directions/v5/mapbox/driving-traffic` +
     `/${fromLng},${fromLat};${toLng},${toLat}` +
     `?access_token=${MAPBOX_KEY}`;
   try {
