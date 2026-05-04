@@ -3,10 +3,12 @@
 // The rest of the app only calls getOccupancy() / getAllOccupancy() and
 // never needs to know which source was used.
 
+import { FACILITIES, DOWNTOWN_PUBLIC_FACILITIES } from './inventory';
+
 export interface OccupancyResult {
   facilityId: string;
-  percent: number;       // 0–100
-  source: 'live' | 'mocked';
+  percent: number;       // 0–100 (meaningless when source === 'static'; use UI caption instead)
+  source: 'live' | 'mocked' | 'static';
   fetchedAt: number;     // unix ms timestamp
   stale: boolean;
 }
@@ -15,6 +17,11 @@ const STALE_THRESHOLD_MS = 5 * 60 * 1000;  // 5 min — matches typical sensor r
 // Note: SJSU uses an internal CA cert — NSAllowsArbitraryLoads in app.json
 // handles this for iOS. The site also only responds on SJSU campus WiFi.
 const STATUS_URL = 'https://sjsuparkingstatus.sjsu.edu/GarageStatus';
+
+function findFacilityMeta(facilityId: string) {
+  return FACILITIES.find(f => f.id === facilityId)
+    ?? DOWNTOWN_PUBLIC_FACILITIES.find(f => f.id === facilityId);
+}
 
 // Maps statusPageName values (from inventory) → facility IDs
 // Must stay in sync with inventory.ts statusPageName fields
@@ -122,6 +129,20 @@ async function refreshLiveData(): Promise<void> {
 }
 
 export async function getOccupancy(facilityId: string): Promise<OccupancyResult> {
+  const meta = findFacilityMeta(facilityId);
+  if (meta?.occupancyTracking === 'none') {
+    const now = Date.now();
+    const result: OccupancyResult = {
+      facilityId,
+      percent: 0,
+      source: 'static',
+      fetchedAt: now,
+      stale: false,
+    };
+    cache[facilityId] = result;
+    return result;
+  }
+
   const cached = cache[facilityId];
   const now = Date.now();
 

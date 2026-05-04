@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
-import { FACILITIES } from '../data/inventory';
+import { facilitiesForSearch } from '../data/inventory';
 import { getAllOccupancy } from '../data/occupancy';
 import { computeAllETAs } from '../engine/eta';
 import { rankOptions, RankingInput } from '../engine/ranking';
@@ -45,6 +45,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [timeSlots] = useState(generateTimeSlots);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [includeDowntownPublic, setIncludeDowntownPublic] = useState(false);
 
   // Origin state
   const [originLabel, setOriginLabel] = useState('My Location');
@@ -130,15 +131,17 @@ export default function HomeScreen({ navigation }: Props) {
         longitude = loc.coords.longitude;
       }
 
+      const facilities = facilitiesForSearch(includeDowntownPublic);
+
       // Fetch occupancy, drive ETAs, and transit ETA all in parallel
       const [occupancyMap, etas] = await Promise.all([
-        getAllOccupancy(FACILITIES.map(f => f.id)),
-        computeAllETAs(FACILITIES, latitude, longitude),
+        getAllOccupancy(facilities.map(f => f.id)),
+        computeAllETAs(facilities, latitude, longitude),
       ]);
       const transitETA = computeTransitETA(latitude, longitude);
 
       // Rank parking options
-      const inputs: RankingInput[] = FACILITIES.map((facility, i) => ({
+      const inputs: RankingInput[] = facilities.map((facility, i) => ({
         facility,
         eta: etas[i],
         occupancy: occupancyMap[facility.id],
@@ -268,6 +271,26 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       )}
 
+      <View style={styles.toggleSection}>
+        <TouchableOpacity
+          style={[styles.toggleRow, includeDowntownPublic && styles.toggleRowActive]}
+          onPress={() => setIncludeDowntownPublic(v => !v)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.toggleTextCol}>
+            <Text style={styles.toggleTitle}>Downtown public parking</Text>
+            <Text style={styles.toggleSubtitle}>
+              ParkSJ garages & lots near downtown — static rates & walk distance to campus (no SJSU sensor).
+            </Text>
+          </View>
+          <View style={[styles.togglePill, includeDowntownPublic && styles.togglePillOn]}>
+            <Text style={[styles.togglePillText, includeDowntownPublic && styles.togglePillTextOn]}>
+              {includeDowntownPublic ? 'On' : 'Off'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity
@@ -350,6 +373,7 @@ const styles = StyleSheet.create({
 
   // ── Time picker ───────────────────────────────────────────────────
   pickerSection: { marginBottom: 24 },
+  pickerLabel: { color: MUTED, fontSize: 12, fontWeight: '600', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
   slotScroll:    { flexGrow: 0 },
   slot: {
     paddingHorizontal: 16, paddingVertical: 10,
@@ -358,6 +382,24 @@ const styles = StyleSheet.create({
   slotSelected:     { backgroundColor: GOLD },
   slotText:         { color: TEXT, fontSize: 14, fontWeight: '500' },
   slotTextSelected: { color: '#000', fontWeight: '700' },
+
+  toggleSection: { marginBottom: 24 },
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: CARD, borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#1A6BC4',
+  },
+  toggleRowActive: { borderColor: GOLD },
+  toggleTextCol: { flex: 1, paddingRight: 12 },
+  toggleTitle: { color: TEXT, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  toggleSubtitle: { color: MUTED, fontSize: 12, lineHeight: 16 },
+  togglePill: {
+    minWidth: 48, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+    backgroundColor: '#003570', alignItems: 'center',
+  },
+  togglePillOn: { backgroundColor: GOLD },
+  togglePillText: { color: MUTED, fontSize: 13, fontWeight: '800' },
+  togglePillTextOn: { color: '#000' },
 
   errorText: { color: '#ff453a', fontSize: 14, marginBottom: 16, textAlign: 'center' },
 
