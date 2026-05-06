@@ -172,11 +172,7 @@ export function rankOptions(
         (a.facility.dailyMax ?? a.facility.ratePerHour * 4) -
         (b.facility.dailyMax ?? b.facility.ratePerHour * 4)
     )[0];
-    if (cheapest.facility.id !== bestChance.facility.id) {
-      cheapest.tags.push('Cheapest');
-    } else {
-      cheapest.tags.push('Cheapest'); // same option, gets both tags
-    }
+    cheapest.tags.push('Cheapest');
   } else {
     // Tag Less Walking and Lower Cost among non-Risky options
     const leastWalk = nonRisky.reduce((a, b) =>

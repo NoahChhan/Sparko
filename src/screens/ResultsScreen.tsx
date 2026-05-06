@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity,
+  TouchableOpacity, Linking, ActionSheetIOS, Platform, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,11 +9,26 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
 import { RiskBucket, ResultTag } from '../engine/ranking';
 import { SerializedTransitResult } from '../../App';
+import { formatTime } from '../utils/format';
+import { ParkingFacility } from '../data/inventory';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Results'>;
   route: RouteProp<RootStackParamList, 'Results'>;
 };
+
+const BG = '#0055A2';
+const CARD = '#004080';
+const CARD_FIRST = '#004F99';
+const TEXT = '#ffffff';
+const MUTED = '#A8C8F0';
+const GOLD = '#E5A823';
+const BORDER = '#1A6BC4';
+
+const TRANSIT_CARD = '#0A3D2E';
+const TRANSIT_BORDER = '#1A7A55';
+const TRANSIT_MUTED = '#7EC8A4';
+const TRANSIT_GREEN = '#30d158';
 
 // ---- Bucket styling --------------------------------------------------------
 const BUCKET_CONFIG: Record<RiskBucket, { label: string; color: string; bg: string }> = {
@@ -28,10 +43,6 @@ const TAG_LABEL: Record<ResultTag, string> = {
   LessWalking: '🚶 Less Walking',
   LowerCost:   '💰 Lower Cost',
 };
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
 
 function formatSlack(slack: number | null): string {
   if (slack === null) return '';
@@ -61,6 +72,33 @@ function OccupancyBlock({ percent, source }: { percent: number; source: 'live' |
   );
 }
 
+async function openDirections(facility: ParkingFacility) {
+  const { lat, lng } = facility.coords;
+  const appleMapsUrl = `maps://maps.apple.com/?daddr=${lat},${lng}`;
+  const googleMapsUrl = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`;
+  const googleMapsWeb = `https://maps.google.com/?q=${lat},${lng}`;
+
+  let hasGoogleMaps = false;
+  try { hasGoogleMaps = await Linking.canOpenURL('comgooglemaps://'); } catch { /* scheme not whitelisted yet */ }
+
+  if (Platform.OS === 'ios') {
+    const options: string[] = ['Cancel', 'Apple Maps'];
+    if (hasGoogleMaps) options.push('Google Maps');
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: `Directions to ${facility.name}`, message: facility.address, options, cancelButtonIndex: 0 },
+      (i) => {
+        if (i === 1) Linking.openURL(appleMapsUrl);
+        else if (i === 2 && hasGoogleMaps) Linking.openURL(googleMapsUrl);
+      }
+    );
+  } else {
+    Alert.alert(`Directions to ${facility.name}`, facility.address, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Google Maps', onPress: () => Linking.openURL(hasGoogleMaps ? googleMapsUrl : googleMapsWeb) },
+    ]);
+  }
+}
+
 function TransitCard({ t }: { t: SerializedTransitResult }) {
   return (
     <View style={transitStyles.card}>
@@ -78,10 +116,12 @@ function TransitCard({ t }: { t: SerializedTransitResult }) {
           <Text style={transitStyles.statValue}>{Math.round(t.totalMinutes)} min</Text>
           <Text style={transitStyles.statLabel}>Total</Text>
         </View>
+        <View style={transitStyles.statDivider} />
         <View style={transitStyles.stat}>
           <Text style={transitStyles.statValue}>$2.50</Text>
           <Text style={transitStyles.statLabel}>Flat fare</Text>
         </View>
+        <View style={transitStyles.statDivider} />
         <View style={transitStyles.stat}>
           <Text style={transitStyles.statValue}>~{t.headwayMinutes} min</Text>
           <Text style={transitStyles.statLabel}>Bus interval</Text>
@@ -130,6 +170,11 @@ export default function ResultsScreen({ navigation, route }: Props) {
         </View>
       </View>
 
+      {/* Results count */}
+      <Text style={styles.resultsSummary}>
+        {results.length} option{results.length !== 1 ? 's' : ''} · ranked by speed & availability
+      </Text>
+
       {/* All-Risky warning banner */}
       {allRisky && (
         <View style={styles.riskyBanner}>
@@ -150,7 +195,12 @@ export default function ResultsScreen({ navigation, route }: Props) {
           const isFirst = i === 0;
 
           return (
-            <View key={r.facility.id} style={[styles.card, isFirst && styles.cardFirst]}>
+            <TouchableOpacity
+              key={r.facility.id}
+              style={[styles.card, isFirst && styles.cardFirst]}
+              onPress={() => openDirections(r.facility)}
+              activeOpacity={0.85}
+            >
               {/* Tag pills */}
               {r.tags.length > 0 && (
                 <View style={styles.tagRow}>
@@ -192,19 +242,21 @@ export default function ResultsScreen({ navigation, route }: Props) {
                   <Text style={styles.statValue}>{formatTime(r.arrivalTime)}</Text>
                   <Text style={styles.statLabel}>Arrival</Text>
                 </View>
+                <View style={styles.statDivider} />
                 <View style={styles.stat}>
                   <Text style={styles.statValue}>{Math.round(r.eta.totalMinutes)} min</Text>
                   <Text style={styles.statLabel}>Total ETA</Text>
                 </View>
+                <View style={styles.statDivider} />
                 <View style={styles.stat}>
                   <Text style={styles.statValue}>
                     ${r.facility.dailyMax ?? `${r.facility.ratePerHour}/hr`}
                   </Text>
-                <Text style={styles.statLabel}>
-                  {r.facility.region === 'downtown_sj' ? 'Typical daily cap' : 'Daily max'}
-                </Text>
+                  <Text style={styles.statLabel}>
+                    {r.facility.region === 'downtown_sj' ? 'Typical daily cap' : 'Daily max'}
+                  </Text>
+                </View>
               </View>
-            </View>
 
               {/* Slack line */}
               {r.slackMinutes !== null && (
@@ -222,9 +274,14 @@ export default function ResultsScreen({ navigation, route }: Props) {
                   🚗 {Math.round(r.eta.driveMinutes)} min drive
                   {r.eta.driveSource === 'straight_line' ? ' (est.)' : ''}
                 </Text>
+                {r.eta.shuttleWaitMinutes > 0 && (
+                  <Text style={styles.breakdownItem}>
+                    ⏱ ~{Math.round(r.eta.shuttleWaitMinutes)} min shuttle wait
+                  </Text>
+                )}
                 {r.eta.shuttleRideMinutes > 0 && (
                   <Text style={styles.breakdownItem}>
-                    🚌 {r.eta.shuttleRideMinutes} min shuttle
+                    🚌 {r.eta.shuttleRideMinutes} min shuttle ride
                   </Text>
                 )}
                 <Text style={styles.breakdownItem}>
@@ -237,9 +294,9 @@ export default function ResultsScreen({ navigation, route }: Props) {
                 )}
               </View>
 
-              {r.facility.notes ? (
+              {r.facility.notes && (
                 <Text style={styles.notes}>{r.facility.notes}</Text>
-              ) : null}
+              )}
 
               {/* Occupancy bar */}
               {r.occupancy && (
@@ -248,7 +305,11 @@ export default function ResultsScreen({ navigation, route }: Props) {
                   source={r.occupancy.source}
                 />
               )}
-            </View>
+
+              <View style={styles.directionsRow}>
+                <Text style={styles.directionsText}>Get directions →</Text>
+              </View>
+            </TouchableOpacity>
           );
         })}
 
@@ -261,14 +322,6 @@ export default function ResultsScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const BG = '#0055A2';
-const CARD = '#004080';
-const CARD_FIRST = '#004F99';
-const TEXT = '#ffffff';
-const MUTED = '#A8C8F0';
-const GOLD = '#E5A823';
-const BORDER = '#1A6BC4';
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG },
@@ -325,8 +378,9 @@ const styles = StyleSheet.create({
   },
   distanceText: { color: MUTED, fontSize: 12, marginTop: 4 },
 
-  statsRow: { flexDirection: 'row', marginBottom: 12, gap: 0 },
+  statsRow: { flexDirection: 'row', marginBottom: 12 },
   stat: { flex: 1 },
+  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: BORDER, marginHorizontal: 8, alignSelf: 'stretch' },
   statValue: { color: TEXT, fontSize: 16, fontWeight: '700' },
   statLabel: { color: MUTED, fontSize: 11, marginTop: 2 },
 
@@ -339,9 +393,13 @@ const styles = StyleSheet.create({
 
   notes: { color: MUTED, fontSize: 11, lineHeight: 15, marginBottom: 12, fontStyle: 'italic' },
 
+  resultsSummary: {
+    color: MUTED, fontSize: 12, paddingHorizontal: 20, marginBottom: 10,
+  },
+
   barTrack: {
-    height: 4, backgroundColor: '#2c2c2e',
-    borderRadius: 2, overflow: 'hidden', marginBottom: 4,
+    height: 6, backgroundColor: '#2c2c2e',
+    borderRadius: 3, overflow: 'hidden', marginBottom: 4,
   },
   barFill: { height: '100%', borderRadius: 2 },
   occupancyLabel: { color: MUTED, fontSize: 11 },
@@ -351,14 +409,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#00357055', padding: 10, borderRadius: 8,
   },
 
-  footer: { color: '#3a3a3c', fontSize: 11, textAlign: 'center', marginTop: 8 },
-});
+  directionsRow: {
+    marginTop: 12, borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: BORDER, paddingTop: 10, alignItems: 'flex-end',
+  },
+  directionsText: { color: GOLD, fontSize: 13, fontWeight: '600' },
 
-const TRANSIT_CARD = '#0A3D2E';
-const TRANSIT_BORDER = '#1A7A55';
-const TRANSIT_TEXT = '#ffffff';
-const TRANSIT_MUTED = '#7EC8A4';
-const TRANSIT_GREEN = '#30d158';
+  footer: { color: MUTED, fontSize: 11, textAlign: 'center', marginTop: 8 },
+});
 
 const transitStyles = StyleSheet.create({
   card: {
@@ -376,13 +434,14 @@ const transitStyles = StyleSheet.create({
     borderWidth: 1, borderColor: TRANSIT_GREEN,
   },
   routeBadgeText: { color: TRANSIT_GREEN, fontSize: 13, fontWeight: '700' },
-  arrivalTime:    { color: TRANSIT_TEXT, fontSize: 15, fontWeight: '700' },
+  arrivalTime:    { color: TEXT, fontSize: 15, fontWeight: '700' },
   longName:       { color: TRANSIT_MUTED, fontSize: 12, marginBottom: 14 },
 
-  statsRow: { flexDirection: 'row', marginBottom: 12 },
-  stat:      { flex: 1 },
-  statValue: { color: TRANSIT_TEXT, fontSize: 16, fontWeight: '700' },
-  statLabel: { color: TRANSIT_MUTED, fontSize: 11, marginTop: 2 },
+  statsRow:   { flexDirection: 'row', marginBottom: 12 },
+  stat:       { flex: 1 },
+  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: TRANSIT_BORDER, marginHorizontal: 8, alignSelf: 'stretch' },
+  statValue:  { color: TEXT, fontSize: 16, fontWeight: '700' },
+  statLabel:  { color: TRANSIT_MUTED, fontSize: 11, marginTop: 2 },
 
   breakdown: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
   breakdownItem: { color: TRANSIT_MUTED, fontSize: 12 },

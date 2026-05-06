@@ -17,8 +17,10 @@
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
-      }
+        },
+        "LSApplicationQueriesSchemes": ["comgooglemaps", "maps"]
+      },
+      "bundleIdentifier": "com.anonymous.Sparko"
     },
     "android": {
       "adaptiveIcon": {

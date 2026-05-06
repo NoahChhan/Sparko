@@ -125,9 +125,8 @@ export async function computeETA(
   const searchBufferMinutes = SEARCH_BUFFER[facility.type];
 
   // --- Shuttle legs (South Campus only) ---
-  // shuttleTransferMinutes = full shuttle journey (wait + ride) defined in inventory
-  // Walk after shuttle is walkMinutesToPin — short, already on campus
-  const shuttleWaitMinutes = 0;
+  // Wait is headway / 2 (expected wait assuming random arrival)
+  const shuttleWaitMinutes = (facility.shuttleHeadwayMinutes ?? 0) / 2;
   const shuttleRideMinutes = facility.shuttleTransferMinutes ?? 0;
 
   // --- Walk ---

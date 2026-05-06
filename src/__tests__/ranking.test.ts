@@ -16,10 +16,10 @@ function makeInput(
       facilityId,
       driveMinutes,
       searchBufferMinutes: 5,
-      shuttleWaitMinutes: 0,
+      shuttleWaitMinutes: facilityId === 'south_campus' ? 5 : 0,
       shuttleRideMinutes: facilityId === 'south_campus' ? 12 : 0,
       walkMinutes: facility.walkMinutesToPin,
-      totalMinutes: driveMinutes + 5 + (facilityId === 'south_campus' ? 12 : 0) + facility.walkMinutesToPin,
+      totalMinutes: driveMinutes + 5 + (facilityId === 'south_campus' ? 17 : 0) + facility.walkMinutesToPin,
       driveSource: 'straight_line',
     },
     occupancy: {

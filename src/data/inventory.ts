@@ -21,7 +21,8 @@ export interface ParkingFacility {
   dailyMax: number | null;   // USD, null if unknown
   walkMinutesToPin: number;  // minutes from facility entrance to SJSU pin (on foot)
   notes: string;
-  shuttleTransferMinutes?: number; // only for South Campus — time on shuttle to campus
+  shuttleTransferMinutes?: number; // only for South Campus — ride time on shuttle to campus
+  shuttleHeadwayMinutes?: number;  // only for South Campus — minutes between shuttles
   // Key used to match against sjsuparkingstatus.sjsu.edu HTML
   statusPageName: string;
   /** SJSU on-campus entries omit this (treated as `sjsu`). */
@@ -89,6 +90,7 @@ export const FACILITIES: ParkingFacility[] = [
     dailyMax: 6,
     walkMinutesToPin: 4,   // walk time AFTER shuttle drop-off on campus
     shuttleTransferMinutes: 12,
+    shuttleHeadwayMinutes: 10,
     notes: 'Cheapest option. Requires shuttle (~every 10 min). ~0.8 mi from campus.',
     statusPageName: 'South Campus Garage',
   },
@@ -107,5 +109,5 @@ export { DOWNTOWN_PUBLIC_FACILITIES };
 export function facilitiesForSearch(includeDowntownPublic: boolean): ParkingFacility[] {
   return includeDowntownPublic
     ? [...FACILITIES, ...DOWNTOWN_PUBLIC_FACILITIES]
-    : [...FACILITIES];
+    : FACILITIES;
 }
